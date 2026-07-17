@@ -162,3 +162,105 @@ Be professional and detailed.
         completion.choices[0].message.content
 
     }
+
+# ==========================================
+# Coding Interview API
+# Add to main.py
+# ==========================================
+
+from pydantic import BaseModel
+
+class CodingRequest(BaseModel):
+    action: str
+    language: str
+    difficulty: str
+    topic: str
+    question: str = ""
+    code: str = ""
+
+
+@app.post("/coding")
+async def coding_interview(req: CodingRequest):
+
+    if req.action == "question":
+
+        prompt = f"""
+You are an expert coding interviewer.
+
+Generate ONE coding interview question.
+
+Language: {req.language}
+Difficulty: {req.difficulty}
+Topic: {req.topic}
+
+Return in Markdown.
+
+Include:
+
+# Problem
+
+# Input
+
+# Output
+
+# Constraints
+
+# Example
+"""
+
+    else:
+
+        prompt = f"""
+You are an expert coding interviewer.
+
+Evaluate this solution.
+
+Language:
+{req.language}
+
+Difficulty:
+{req.difficulty}
+
+Topic:
+{req.topic}
+
+Question:
+{req.question}
+
+Candidate Code:
+{req.code}
+
+Return Markdown.
+
+Include:
+
+# Score (/10)
+
+# Correctness
+
+# Code Quality
+
+# Time Complexity
+
+# Space Complexity
+
+# Bugs (if any)
+
+# Optimized Solution
+
+# Final Feedback
+"""
+
+    completion = client.chat.completions.create(
+        model="openai/gpt-oss-20b",
+        messages=[
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ]
+    )
+
+    return {
+        "response": completion.choices[0].message.content
+    }
