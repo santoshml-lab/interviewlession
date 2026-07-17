@@ -83,3 +83,82 @@ Improved Answer:
     return {
         "response": response.choices[0].message.content
     }
+
+# ==========================================
+# Resume Analyzer API
+# Add this to main.py
+# ==========================================
+
+from fastapi import UploadFile, File, Form
+import pdfplumber
+
+@app.post("/resume")
+async def resume_analyzer(
+
+    resume: UploadFile = File(...),
+    role: str = Form(...)
+
+):
+
+    # Read PDF
+    with pdfplumber.open(resume.file) as pdf:
+
+        text = ""
+
+        for page in pdf.pages:
+
+            page_text = page.extract_text()
+
+            if page_text:
+
+                text += page_text + "\n"
+
+    prompt = f"""
+You are an expert ATS Resume Reviewer.
+
+Target Job Role:
+{role}
+
+Resume:
+{text}
+
+Analyze the resume and return Markdown format.
+
+Include:
+
+# ATS Score (/100)
+
+# Resume Summary
+
+# Strengths
+
+# Weaknesses
+
+# Missing Skills
+
+# Improvement Suggestions
+
+# Interview Questions (5)
+
+Be professional and detailed.
+"""
+
+    completion = client.chat.completions.create(
+
+        model="openai/gpt-oss-20b",
+
+        messages=[
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ]
+
+    )
+
+    return {
+
+        "response":
+        completion.choices[0].message.content
+
+    }
