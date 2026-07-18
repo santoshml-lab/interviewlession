@@ -264,3 +264,53 @@ Include:
     return {
         "response": completion.choices[0].message.content
     }
+
+# ==========================================
+# Performance Analyzer API
+# Add to main.py
+# ==========================================
+
+@app.get("/performance")
+async def performance():
+
+    prompt = """
+You are an AI Career Coach.
+
+Generate a realistic interview performance report.
+
+Return ONLY valid JSON.
+
+{
+  "overall_score":"8.8/10",
+  "mock_interviews":"12",
+  "coding_interviews":"18",
+  "resume_analysis":"6",
+  "interview_score":"88%",
+  "coding_score":"91%",
+  "ats_score":"85%",
+  "strengths":"## Strengths\n- Excellent problem solving\n- Strong Python knowledge\n- Good communication skills",
+  "weak_areas":"## Weak Areas\n- Dynamic Programming\n- System Design\n- Behavioral storytelling",
+  "recommendation":"## AI Recommendation\nPractice medium-level DSA questions, improve system design fundamentals, and attend one mock HR interview every week."
+}
+"""
+
+    completion = client.chat.completions.create(
+
+        model="openai/gpt-oss-20b",
+
+        messages=[
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ],
+
+        response_format={"type": "json_object"}
+
+    )
+
+    import json
+
+    return json.loads(
+        completion.choices[0].message.content
+    )
