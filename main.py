@@ -314,3 +314,75 @@ Return ONLY valid JSON.
     return json.loads(
         completion.choices[0].message.content
     )
+
+from supabase import create_client
+import os
+
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
+
+supabase = create_client(
+    SUPABASE_URL,
+    SUPABASE_SERVICE_KEY
+)
+
+from pydantic import BaseModel
+
+class SaveHistoryRequest(BaseModel):
+    user_id: str
+    company: str
+    role: str
+    score: str
+    feedback: str
+    interview_type: str
+
+
+@app.post("/history")
+async def save_history(req: SaveHistoryRequest):
+
+    data = supabase.table("interview_history").insert({
+
+        "user_id": req.user_id,
+        "company": req.company,
+        "role": req.role,
+        "score": req.score,
+        "feedback": req.feedback,
+        "interview_type": req.interview_type
+
+    }).execute()
+
+    return {
+        "success": True,
+        "data": data.data
+    }
+
+@app.get("/history/{user_id}")
+async def get_history(user_id: str):
+
+    data = supabase.table("interview_history")\
+        .select("*")\
+        .eq("user_id", user_id)\
+        .order("created_at", desc=True)\
+        .execute()
+
+    return data.data
+
+@app.delete("/history/{history_id}")
+async def delete_history(history_id: int):
+
+    supabase.table("interview_history")\
+        .delete()\
+        .eq("id", history_id)\
+        .execute()
+
+    return {
+        "success": True
+    }
+
+
+
+
+
+
+
+
