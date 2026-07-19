@@ -511,6 +511,58 @@ __/10
         "response": completion.choices[0].message.content
     }
 
+# ==========================================
+# Aptitude History API
+# ==========================================
+
+class SaveAptitudeHistoryRequest(BaseModel):
+    user_id: str
+    category: str
+    difficulty: str
+    score: str
+    question: str
+    feedback: str
+
+
+@app.post("/aptitude-history")
+async def save_aptitude_history(req: SaveAptitudeHistoryRequest):
+
+    data = supabase.table("aptitude_history").insert({
+        "user_id": req.user_id,
+        "category": req.category,
+        "difficulty": req.difficulty,
+        "score": req.score,
+        "question": req.question,
+        "feedback": req.feedback
+    }).execute()
+
+    return {"success": True, "data": data.data}
+
+
+@app.get("/aptitude-history/{user_id}")
+async def get_aptitude_history(user_id: str):
+
+    data = (
+        supabase.table("aptitude_history")
+        .select("*")
+        .eq("user_id", user_id)
+        .order("created_at", desc=True)
+        .execute()
+    )
+
+    return data.data
+
+
+@app.delete("/aptitude-history/{history_id}")
+async def delete_aptitude_history(history_id: int):
+
+    supabase.table("aptitude_history") \
+        .delete() \
+        .eq("id", history_id) \
+        .execute()
+
+    return {"success": True}
+
 
 
 
