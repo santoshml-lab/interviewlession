@@ -379,6 +379,50 @@ async def delete_history(history_id: int):
         "success": True
     }
 
+from fastapi import HTTPException
+
+@app.get("/dashboard/{user_id}")
+async def dashboard(user_id: str):
+
+    history = supabase.table("interview_history") \
+        .select("*") \
+        .eq("user_id", user_id) \
+        .execute()
+
+    records = history.data
+
+    total_interviews = len(records)
+
+    avg_score = 0
+
+    if total_interviews > 0:
+        scores = []
+
+        for item in records:
+            try:
+                score = float(item["score"].replace("/10", ""))
+                scores.append(score)
+            except:
+                pass
+
+        if scores:
+            avg_score = round(sum(scores) / len(scores), 1)
+
+    return {
+        "total_interviews": total_interviews,
+        "average_score": avg_score,
+        "resume_reviews": 0,
+        "coding_rounds": 0,
+        "xp": total_interviews * 20,
+        "streak": min(total_interviews, 30),
+        "badge": (
+            "🌱 Beginner" if total_interviews < 5 else
+            "🚀 Intermediate" if total_interviews < 15 else
+            "🏆 Expert"
+        ),
+        "readiness": min(int(avg_score * 10), 100)
+    }
+
 
 
 
