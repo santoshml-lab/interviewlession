@@ -423,6 +423,94 @@ async def dashboard(user_id: str):
         "readiness": min(int(avg_score * 10), 100)
     }
 
+# ==========================================
+# Aptitude AI API
+# ==========================================
+
+from pydantic import BaseModel
+
+class AptitudeRequest(BaseModel):
+    action: str
+    category: str
+    difficulty: str
+    question: str = ""
+    answer: str = ""
+
+
+@app.post("/aptitude")
+async def aptitude(req: AptitudeRequest):
+
+    if req.action == "question":
+
+        prompt = f"""
+You are an aptitude interviewer.
+
+Generate ONE {req.difficulty} level aptitude question.
+
+Category:
+{req.category}
+
+Return in Markdown.
+
+Include:
+
+# Question
+
+# Answer
+(Do NOT reveal the answer.)
+
+"""
+
+    else:
+
+        prompt = f"""
+You are an aptitude evaluator.
+
+Category:
+{req.category}
+
+Difficulty:
+{req.difficulty}
+
+Question:
+{req.question}
+
+Candidate Answer:
+{req.answer}
+
+Evaluate in Markdown.
+
+Format:
+
+# Score
+__/10
+
+# Correct Answer
+
+# Explanation
+
+# Feedback
+"""
+
+    completion = client.chat.completions.create(
+
+        model="openai/gpt-oss-20b",
+
+        messages=[
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ],
+
+        temperature=0.7
+
+    )
+
+    return {
+        "response": completion.choices[0].message.content
+    }
+
 
 
 
