@@ -563,6 +563,63 @@ async def delete_aptitude_history(history_id: int):
 
     return {"success": True}
 
+# ==========================================
+# Leaderboard API
+# ==========================================
+
+from pydantic import BaseModel
+
+class LeaderboardRequest(BaseModel):
+    user_id: str
+    name: str
+    xp: int
+    badge: str
+
+
+@app.post("/leaderboard")
+async def save_leaderboard(req: LeaderboardRequest):
+
+    existing = supabase.table("leaderboard") \
+        .select("*") \
+        .eq("user_id", req.user_id) \
+        .execute()
+
+    if existing.data:
+
+        supabase.table("leaderboard") \
+            .update({
+                "name": req.name,
+                "xp": req.xp,
+                "badge": req.badge
+            }) \
+            .eq("user_id", req.user_id) \
+            .execute()
+
+    else:
+
+        supabase.table("leaderboard") \
+            .insert({
+                "user_id": req.user_id,
+                "name": req.name,
+                "xp": req.xp,
+                "badge": req.badge
+            }) \
+            .execute()
+
+    return {"success": True}
+
+
+@app.get("/leaderboard")
+async def get_leaderboard():
+
+    data = supabase.table("leaderboard") \
+        .select("*") \
+        .order("xp", desc=True) \
+        .limit(20) \
+        .execute()
+
+    return data.data
+
 
 
 
